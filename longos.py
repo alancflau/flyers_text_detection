@@ -54,6 +54,13 @@ prdcts = driver.find_elements_by_xpath('//sfml-flyer-image//button')
 print(len(prdcts)) #165
 j = 1
 counter_to_break = 0
+
+# Create lists
+product_lst = []
+price_value_lst = []
+save_amount_lst = []
+description_lst = []
+
 for i in prdcts:
     driver.execute_script("arguments[0].scrollIntoView();", i)
     i.click()
@@ -68,12 +75,60 @@ for i in prdcts:
             button_link_to_text = '/html/body/flipp-router/flipp-publication-page/div/flipp-sfml-component/sfml-storefront/div/sfml-linear-layout/sfml-flyer-image[{}]/div/button[{}]'.format(j,i)
             button = driver.find_element_by_xpath(button_link_to_text)
             driver.execute_script("arguments[0].click();", button)
+            # button.click()
+            # Switch to default content
+            driver.switch_to.default_content()
             time.sleep(3)
+            # print(driver.page_source)
+            # iframe
+            WebDriverWait(driver, 30).until(
+                EC.frame_to_be_available_and_switch_to_it((By.XPATH, "//iframe[@class='flippiframe productframe']")))
 
-            print(button.get_attribute("aria-label"))
+            # Product Name
+            try:
+                product_name = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CLASS_NAME, "primary-info-header")))
+                prod = product_name.text
+            except:
+                prod = ''
+            print(prod)
+
+            # Price Value
+            try:
+                price_value = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CLASS_NAME, "price-value")))
+                price = price_value.text
+            except:
+                price = ''
+
+            # Save amount
+            try:
+                save_amt = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CLASS_NAME, "salestory")))
+                saved = save_amt.text
+            except:
+                saved = ''
+
+            # description
+            try:
+                desc = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CLASS_NAME, "flipp-description")))
+                description = desc.text
+            except:
+                description = ''
+
+            product_lst.append(prod)
+            price_value_lst.append(price)
+            save_amount_lst.append(saved)
+            description_lst.append(description)
+
+            # print(button.get_attribute("aria-label"))
+            #switch back to other frmae
+
+            driver.switch_to.default_content()
+
+            # iframe = driver.find_element_by_xpath('//iframe[@class="flippiframe mainframe"]')
+            driver.switch_to.frame(iframe)
 
             i+=1
             counter_to_break = 0
+
 
         except:
             counter_to_break+=1
@@ -83,3 +138,11 @@ for i in prdcts:
     if counter_to_break >=5:
         break
     print('----------------------')
+
+
+df = pd.DataFrame(list(zip(product_lst, price_value_lst,save_amount_lst,description_lst)),
+             columns =['Item','Price','Saved Amount','Description'])
+print(df)
+
+
+driver.close()
